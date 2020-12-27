@@ -130,7 +130,7 @@ public class Main {
                 drawPanel.repaint();
                 msgLabel.setText("ok");
             } catch (Exception ex) {
-                msgLabel.setText(ex.toString());
+                ex.printStackTrace();
             }
         });
 

@@ -101,7 +101,7 @@ public class Parser {
     		profondeur--;
             return;
         }
-        throw new Exception("entier attendu");
+        throw new Exception("ident attendu");
     }
 
     private void D() throws Exception {
@@ -129,8 +129,9 @@ public class Parser {
     			getToken();
                 return;
     		}
+    		throw new Exception("fermerture de block attendu");
         }
-        throw new Exception("entier attendu");
+        throw new Exception("ouverture de block attendu");
     }
 
     private TokenClass getTokenClass() {

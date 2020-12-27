@@ -4,6 +4,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Stack;
 
 public class Interpreter {
 
@@ -43,7 +44,12 @@ public class Interpreter {
 
         // récupère un exemple 'en dur' d'arbre syntaxique abstrait
         // A FAIRE : remplacer par l'implémentation d'une analyse syntaxique descendante
-        Node root = exampleAst();
+        SourceReader sr = new SourceReader(s);
+        ArrayList<Token> tokens = new Lexer().lexer(sr);
+
+        new Parser().parser(tokens);
+
+        Node root = constructionAst(tokens);
 
         System.out.println("Arbre syntaxique abstrait :");
         printAst(root, 0);
@@ -86,6 +92,12 @@ public class Interpreter {
                     eval(nodeToRepeat);
                 }
                 break;
+            case nColor:
+            	gc.setColor(colors[Integer.parseInt(n.getValue())]);
+            	break;
+            case nCall:
+            	eval(procedures.get(n.getValue()).getChildren().next());
+
             // A FAIRE : implémenter l'interprétation des noeuds nCall et nColor
         }
     }
@@ -133,5 +145,68 @@ public class Interpreter {
         root.appendNode(n21);
 
         return root;
+    }
+
+    private Node constructionAst(ArrayList<Token> tokens){
+    	Stack<Node> roots = new Stack<Node>();
+    	roots.push(new Node(NodeClass.nBlock));
+    	int i = 0;
+    	Node node;
+    	Node nodeBlock;
+    	while(i < tokens.size()){
+    		if(tokens.get(i).getCl() == TokenClass.ouvreBlock){
+    			roots.push(new Node(NodeClass.nBlock));
+    		}
+    		else if(tokens.get(i).getCl() == TokenClass.fermeBlock){
+    			roots.pop();
+    		}
+    		else if(tokens.get(i).getCl() == TokenClass.procedure){
+    			node = new Node(NodeClass.nProc,
+    					tokens.get(i+1).getValue());
+    			roots.peek().appendNode(node);
+    			i++;
+    			nodeBlock = new Node(NodeClass.nBlock);
+    			node.appendNode(nodeBlock);
+    			roots.push(nodeBlock);
+    			i++;
+    		}
+    		else if(tokens.get(i).getCl() == TokenClass.left){
+    			roots.peek().appendNode(new Node(NodeClass.nLeft,
+    					tokens.get(i+1).getValue()));
+    			i++;
+    		}
+    		else if(tokens.get(i).getCl() == TokenClass.right){
+    			roots.peek().appendNode(new Node(NodeClass.nRight,
+    					tokens.get(i+1).getValue()));
+    			i++;
+    		}
+    		else if(tokens.get(i).getCl() == TokenClass.forward){
+    			roots.peek().appendNode(new Node(NodeClass.nForward,
+    					tokens.get(i+1).getValue()));
+    			i++;
+    		}
+    		else if(tokens.get(i).getCl() == TokenClass.reapeat){
+    			node = new Node(NodeClass.nRepeat,
+    					tokens.get(i+1).getValue());
+    			roots.peek().appendNode(node);
+    			i++;
+    			nodeBlock = new Node(NodeClass.nBlock);
+    			node.appendNode(nodeBlock);
+    			roots.push(nodeBlock);
+    			i++;
+    		}
+    		else if(tokens.get(i).getCl() == TokenClass.color){
+    			roots.peek().appendNode(new Node(NodeClass.nColor,
+    					tokens.get(i+1).getValue()));
+    			i++;
+    		}
+    		else if(tokens.get(i).getCl() == TokenClass.call){
+    			roots.peek().appendNode(new Node(NodeClass.nCall,
+    					tokens.get(i+1).getValue()));
+    			i++;
+    		}
+    		i++;
+    	}
+    	return roots.pop();
     }
 }
